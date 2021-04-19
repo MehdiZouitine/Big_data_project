@@ -26,10 +26,9 @@ class BERT_clf(nn.Module):
 
     def forward(self, sent_id, mask):
 
-        # pass the inputs to the model
-        _, cls_hs = self.bert(sent_id, attention_mask=mask)
-        # cls_hs = self.bert(sent_id, attention_mask=mask)[0][:, 0]
-        # cls_hs = torch.cat((cls_hs, gender), dim=1)
+        _, cls_hs = self.bert(sent_id, attention_mask=mask, return_dict=False)  # BERT
+
+        # Bert fine tuning
         x = self.dropout(cls_hs)
         x = self.fc1(x)
 

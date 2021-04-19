@@ -3,7 +3,7 @@ import pandas as pd
 from sklearn.model_selection import train_test_split
 import torch
 import torch.nn as nn
-from torch.utils.data import DataLoader, WeightedRandomSampler
+from torch.utils.data import DataLoader
 from transformers import (
     BertModel,
     BertConfig,
@@ -36,8 +36,8 @@ import warnings
 warnings.filterwarnings("ignore")
 
 if __name__ == "__main__":
-    DATA_PATH = "src\deep\data" # Specify the data path
-    train_df = pd.read_json(DATA_PATH + "/train.json") #data loading
+    DATA_PATH = "src\deep\data"  # Specify the data path
+    train_df = pd.read_json(DATA_PATH + "/train.json")  # data loading
     test_df = pd.read_json(DATA_PATH + "/test.json")
     train_label = pd.read_csv(DATA_PATH + "/train_label.csv")
     train_df["gender"] = train_df.apply(
@@ -56,7 +56,7 @@ if __name__ == "__main__":
         shuffle=True,
     )
 
-    #Load bert tokenizer and bert model
+    # Load bert tokenizer and bert model
     tokenizer = BertTokenizerFast.from_pretrained("bert-base-uncased")
     bert = BertModel.from_pretrained("bert-base-uncased")
     train_dataset = NlpTrainDataset(train, train_labels, tokenizer)
@@ -81,9 +81,14 @@ if __name__ == "__main__":
     top_k = None
     loss_name = "Linked"
     scheduler_name = "get_linear_schedule_with_warmup"
-    model = BERT_clf(bert, freeze=freeze) # Load pretrained bert and choose to freeze or not the pretrained weight
+    model = BERT_clf(
+        bert, freeze=freeze
+    )  # Load pretrained bert and choose to freeze or not the pretrained weight
     model = model.to(device)
-    no_decay = ["bias", "LayerNorm.weight"] # We do not apply weight decay regularization on some layers (see bibliography)
+    no_decay = [
+        "bias",
+        "LayerNorm.weight",
+    ]  # We do not apply weight decay regularization on some layers (see bibliography)
     lr_layerdecay = None
 
     # Here is tricky part : We apply different learning rate and weight decray for each layer
@@ -116,10 +121,10 @@ if __name__ == "__main__":
     # loss_function = HardNegCrossEntropy(top_k=top_k)
     loss_function = LinkedCrossEntropy(alpha_link, link)
     # loss_function = LinkedHardNegCrossEntropy(alpha_link, link,top_k)
-    # CREATE LOADER TO PASS BATCH OF DATA INTO THE MODEL 
+    # CREATE LOADER TO PASS BATCH OF DATA INTO THE MODEL
     train_dataloader = DataLoader(
         train_dataset, batch_size=batch_size, shuffle=True, num_workers=3
-    ) # Shuffle on train
+    )  # Shuffle on train
     val_dataloader = DataLoader(
         val_dataset, batch_size=batch_size, shuffle=False, num_workers=3
     )
@@ -130,7 +135,7 @@ if __name__ == "__main__":
         optimizer, num_warmup_steps=num_warmup_steps, num_training_steps=total_steps
     )
     # Early stopping hyperparameters
-    tolerance = 20 
+    tolerance = 20
     delta = 0.0005
     # Early stopping
     early_stopper = EarlyStopping(tolerance, delta)
@@ -157,7 +162,7 @@ if __name__ == "__main__":
         "freeze": freeze,
         "alpha_link": alpha_link,
         "comment": comment,
-    }  
+    }
     # Module used in the model
     modules = {
         "model": model,
@@ -167,7 +172,7 @@ if __name__ == "__main__":
         "device": device,
         "early_stopper": early_stopper,
     }
-    #Train the model
+    # Train the model
     learn(
         train_dataloader,
         val_dataloader,

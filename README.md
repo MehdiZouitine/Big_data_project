@@ -45,3 +45,20 @@ As results, we obtain a score of 0.712.
 We will now see how to build a better model based on Neural Networks.
 
 # A Deep Learning Model - Bert transformer + fine tuning
+
+To improve our score we used fine tuning on model bert.
+By using bert model we improved our score in the test (from 0.712 to 0.809).
+
+We used many tricks to improve our results, that are documented directly in the code.
+Some examples :
+* Focal loss
+* Hard negative mining
+* Different learning rate and weight decay
+
+We also try thing that didn't work well : 
+* Undersampling and Oversampling (Because the dataset is highly unbalanced)
+* Use bert large
+* Use distil bert
+* Use more dense layer for the fine tuning head
+
+We also used mlflow to monitor our model and generate many confusion matrix to analyze the weak point of our model

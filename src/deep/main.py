@@ -17,8 +17,6 @@ import mlflow
 from dataloader import (
     NlpTrainDataset,
     NlpTestDataset,
-    split_mass,
-    NlpTrainSamplerDataset,
 )
 from transformers import get_linear_schedule_with_warmup
 from torch.optim.lr_scheduler import ReduceLROnPlateau, StepLR
@@ -32,16 +30,14 @@ from crossentropy import (
     LinkedCrossEntropy,
     LinkedHardNegCrossEntropy,
 )
-from tricks import seed_everything
 from model import BERT_clf
 import warnings
 
 warnings.filterwarnings("ignore")
 
 if __name__ == "__main__":
-    seed_everything()
-    DATA_PATH = "data"
-    train_df = pd.read_json(DATA_PATH + "/train.json")
+    DATA_PATH = "src\deep\data" # Specify the data path
+    train_df = pd.read_json(DATA_PATH + "/train.json") #data loading
     test_df = pd.read_json(DATA_PATH + "/test.json")
     train_label = pd.read_csv(DATA_PATH + "/train_label.csv")
     train_df["gender"] = train_df.apply(
@@ -59,51 +55,38 @@ if __name__ == "__main__":
         random_state=7,
         shuffle=True,
     )
-    actual_train = (train_labels.value_counts() / train_labels.shape[0]).to_dict()
-    actual_val = (val_labels.value_counts() / val_labels.shape[0]).to_dict()
-    desired_dist = split_mass(actual_train, 19, [0, 3, 7, 13, 17, 24], ratio=0.8)
 
+    #Load bert tokenizer and bert model
     tokenizer = BertTokenizerFast.from_pretrained("bert-base-uncased")
     bert = BertModel.from_pretrained("bert-base-uncased")
-    # tokenizer = DistilBertTokenizerFast.from_pretrained('bert-base-uncased')
-    # bert = DistilBertModel.from_pretrained("distilbert-base-uncased")
-    train_dataset = NlpTrainSamplerDataset(train, train_labels, tokenizer, desired_dist)
+    train_dataset = NlpTrainDataset(train, train_labels, tokenizer)
     val_dataset = NlpTrainDataset(val, val_labels, tokenizer)
+    # Choose hyperparameters
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     epochs = 1
     batch_size = 2
     lr = 1.5e-5
     lr_clf = None
     eps = 1e-8
+    # Custom loss parameters
     alpha = None
     gamma = None
     gamma_scheduler = None
     freeze = False
-    # link = {0:[3,19],3:[19,0,2], 7: [24], 11: [19], 23: [26], 24: [13,19],13:[24],17:[11],23:[26],2:[3]}
+    # Link use in custom loss (see loss file for more details)
     link = {0: [3, 19], 3: [19], 7: [24], 17: [11], 23: [26], 2: [3], 24: [13]}
     alpha_link = 3
+    # For bert fine-tuning it's more suitable to use Adam-warmup
     optimizer_name = "AdamW"
     top_k = None
     loss_name = "Linked"
     scheduler_name = "get_linear_schedule_with_warmup"
-    model = BERT_clf(bert, freeze=freeze)
-    # model = BertForSequenceClassification.from_pretrained('bert-base-uncased', return_dict=True,num_labels=28)
+    model = BERT_clf(bert, freeze=freeze) # Load pretrained bert and choose to freeze or not the pretrained weight
     model = model.to(device)
-    no_decay = ["bias", "LayerNorm.weight"]
+    no_decay = ["bias", "LayerNorm.weight"] # We do not apply weight decay regularization on some layers (see bibliography)
     lr_layerdecay = None
 
-    # optimizer_grouped_parameters = [
-    #     {'params': model.bert.embeddings.parameters(), 'lr': lr * (lr_layerdecay ** 12)},
-    #     {'params': model.fc1.parameters(), 'lr': lr},
-    #     {'params': model.bert.pooler.parameters(), 'lr': lr}
-    # ]
-
-    # for layer in range(12):
-    #     optimizer_grouped_parameters.append(
-    #         {'params': model.bert.encoder.layer.__getattr__('%d' % (12- 1 - layer)).parameters(),
-    #          'lr': lr * (lr_layerdecay ** layer)},
-    #     )
-
+    # Here is tricky part : We apply different learning rate and weight decray for each layer
     optimizer_grouped_parameters = [
         {
             "params": [
@@ -123,6 +106,7 @@ if __name__ == "__main__":
         },
     ]
     optimizer = AdamW(optimizer_grouped_parameters, lr=lr)
+    ## SOME PARAMETERS TESTED
     # optimizer = Adam(model.parameters(),lr=lr,eps=eps)
     # loss_function = FocalLoss(alpha=alpha,gamma=gamma)
     # class_weights = compute_class_weight(class_weight='balanced', classes=np.unique(train_labels), y=train_labels.values)
@@ -132,24 +116,27 @@ if __name__ == "__main__":
     # loss_function = HardNegCrossEntropy(top_k=top_k)
     loss_function = LinkedCrossEntropy(alpha_link, link)
     # loss_function = LinkedHardNegCrossEntropy(alpha_link, link,top_k)
-    # train_sampler = WeightedRandomSampler(df_sample['weights'].values, len(df_sample['weights'].values))
+    # CREATE LOADER TO PASS BATCH OF DATA INTO THE MODEL 
     train_dataloader = DataLoader(
         train_dataset, batch_size=batch_size, shuffle=True, num_workers=3
-    )
+    ) # Shuffle on train
     val_dataloader = DataLoader(
         val_dataset, batch_size=batch_size, shuffle=False, num_workers=3
     )
     total_steps = len(train_dataloader) * epochs
     num_warmup_steps = int(0.1 * total_steps)
-
+    # Linearly decrease the lr and do some warmup step
     scheduler = get_linear_schedule_with_warmup(
         optimizer, num_warmup_steps=num_warmup_steps, num_training_steps=total_steps
     )
-    tolerance = 20
+    # Early stopping hyperparameters
+    tolerance = 20 
     delta = 0.0005
+    # Early stopping
     early_stopper = EarlyStopping(tolerance, delta)
 
     comment = "layer_decay"
+    # All the parameters of the models (dict is usefull to log the model on mlflow)
     hyperparameters = {
         "epochs": epochs,
         "batch_size": batch_size,
@@ -170,8 +157,8 @@ if __name__ == "__main__":
         "freeze": freeze,
         "alpha_link": alpha_link,
         "comment": comment,
-    }
-
+    }  
+    # Module used in the model
     modules = {
         "model": model,
         "optimizer": optimizer,
@@ -180,6 +167,7 @@ if __name__ == "__main__":
         "device": device,
         "early_stopper": early_stopper,
     }
+    #Train the model
     learn(
         train_dataloader,
         val_dataloader,

@@ -127,3 +127,6 @@ src/deep/mlruns/*
 *.pdf 
 *.json 
 *.txt
+*mlflow
+*.yaml
+mlruns*

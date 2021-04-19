@@ -61,7 +61,7 @@ We will now see how to build a better model based on Neural Networks.
 # A Deep Learning Model - Bert transformer + fine tuning
 
 ## Train the model
-First download the data avaible here : 
+First download the data avaible here : https://file.io/1jxLptaXKMKM or https://file.io/c1QFuIyoltFb (if the link don't work, please contact us)
 ```
 cd deep/src/
 python main.py
@@ -82,4 +82,6 @@ We also try thing that didn't work well :
 * Use distil bert
 * Use more dense layer for the fine tuning head
 
-We also used mlflow to monitor our model and generate many confusion matrix to analyze the weak point of our model
+We also used mlflow to monitor our model and generate many confusion matrix to analyze the weak point of our model : 
+
+(Some images are avaible in the folder images )

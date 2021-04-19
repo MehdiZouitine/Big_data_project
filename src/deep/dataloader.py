@@ -3,11 +3,23 @@ from torch.utils.data import Dataset
 import torch
 from transformers import BertTokenizerFast
 import numpy as np
+import pandas
 
 
 class NlpTrainDataset(Dataset):
-    
-    def __init__(self, df, labels, tokenizer):
+    def __init__(
+        self,
+        df: pandas.core.frame.DataFrame,
+        labels: pandas.core.frame.DataFrame,
+        tokenizer: BertTokenizerFast,
+    ):
+        """[Dataloader to generate shuffle batch of data]
+
+        Args:
+            df (pandas.core.frame.DataFrame): [Train text]
+            labels (pandas.core.frame.DataFrame): [Train labels (jobs)]
+            tokenizer (BertTokenizerFast): [Text tokenizer for bert]
+        """
 
         self.labels = labels.tolist()
         self.encodings = tokenizer.batch_encode_plus(
@@ -27,9 +39,16 @@ class NlpTrainDataset(Dataset):
         return len(self.Id)
 
 
-
 class NlpTestDataset(Dataset):
-    def __init__(self, df, tokenizer):
+    def __init__(
+        self, df: pandas.core.frame.DataFrame, tokenizer: pandas.core.frame.DataFrame
+    ):
+        """[Dataloader to generate test batch of data]
+
+        Args:
+            df (pandas.core.frame.DataFrame): [Train text]
+            tokenizer (BertTokenizerFast): [Text tokenizer for bert]
+        """
 
         self.encodings = tokenizer.batch_encode_plus(
             df["description"].to_list(), max_length=170, padding=True, truncation=True
@@ -45,4 +64,3 @@ class NlpTestDataset(Dataset):
 
     def __len__(self):
         return len(self.Id)
-

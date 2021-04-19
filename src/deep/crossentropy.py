@@ -3,7 +3,13 @@ import torch
 
 
 class HardNegCrossEntropy(nn.Module):
-    def __init__(self, top_k, weight=None):
+    def __init__(self, top_k: int, weight: torch.tensor = None):
+        """[Custom cross entropy that multiply the gradient on top k error sample of the batch]
+
+        Args:
+            top_k (int): [Number of sample to penalize on the batch]
+            weight (torch.tensor, optional): [Optional sample weight for cross entropy]. Defaults to None.
+        """
         super(HardNegCrossEntropy, self).__init__()
         self.top_k = top_k
         self.weight = weight
@@ -20,7 +26,19 @@ class HardNegCrossEntropy(nn.Module):
 
 
 class LinkedCrossEntropy(nn.Module):
-    def __init__(self, alpha_link: float, link: dict, weight=None):
+    def __init__(self, alpha_link: float, link: dict, weight: torch.tensor = None):
+        """[Which penalizes the fact of misclassifying two related classes. We link two classes when they are close semantically:
+         For example we will strongly penalize a model that predicts
+          teacher instead of professor because they are related.
+           We do this because the model tends to confuse two close classes.
+            The model tends to predict teacher for teacher because the class teacher
+             is in the majority.]
+
+        Args:
+            alpha_link (float): [Coefficient of penalization]
+            link (dict): [Dict of link beetween class]
+            weight (torch.tensor, optional): [Optional sample weight for cross entropy]. Defaults to None.
+        """
         super(LinkedCrossEntropy, self).__init__()
         self.alpha_link = alpha_link
         self.weight = weight
@@ -49,7 +67,16 @@ class LinkedCrossEntropy(nn.Module):
 
 
 class LinkedHardNegCrossEntropy(nn.Module):
-    def __init__(self, alpha_link: float, link: dict, top_k, weight=None):
+    def __init__(self, alpha_link: float, link: dict, top_k:int, weight:torch.tensor=None):
+        """[Fusion of the 2 precedent losses]
+
+        Args:
+            alpha_link (float): [Coefficient of penalization]
+            link (dict): [Dict of link beetween class]
+            top_k (int): [Number of sample to penalize on the batch]
+            weight (torch.tensor, optional): [Optional sample weight for cross entropy]. Defaults to None.
+        """
+        
         super(LinkedHardNegCrossEntropy, self).__init__()
         self.alpha_link = alpha_link
         self.weight = weight

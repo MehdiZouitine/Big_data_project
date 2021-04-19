@@ -7,6 +7,17 @@ import numpy as np
 
 
 def track(hyperparameters, metrics, model, epoch, save, run_id, path_cufusion_mat):
+    """[Wrapper to log metrics,score and other informations on the mflow logger]
+
+    Args:
+        hyperparameters,
+        metrics,
+        model,
+        epoch,
+        save,
+        run_id,
+        path_cufusion_mat,
+    """
     if epoch == 0:
         mlflow.log_params(hyperparameters)
 
@@ -25,6 +36,12 @@ def track(hyperparameters, metrics, model, epoch, save, run_id, path_cufusion_ma
 
 class EarlyStopping:
     def __init__(self, tolerance: int, delta: float):
+        """[Early stopping module]
+
+        Args:
+            tolerance (int): [Number of epoch without improvement]
+            delta (float): [Minimum difference of metric]
+        """
         self.tolerance = tolerance  # MAX NUMBER OF EPOCH WITHOUT IMPROVEMENT
         self.nb_epoch_without_progress = 0  # NUMBER OF EPOCH WITHOUT IMPROVEMENT
         self.delta = delta  # MINIMUM VALUE OF IMPROVEMENT
@@ -42,7 +59,17 @@ class EarlyStopping:
             return {"stop": False, "save": False}
 
 
-def plot_confusion_matrix(array, run_id, epoch):
+def plot_confusion_matrix(array: np.ndarray, run_id: str, epoch: int):
+    """[Plot confusion matric]
+
+    Args:
+        array (np.ndarray): [Confusion matrix]
+        run_id (str): [mlflow run id]
+        epoch (int): [number of epochs]
+
+    Returns:
+        [str]: [confusion matrix path]
+    """
     array = array.astype("float") / array.sum(axis=1)[:, np.newaxis]
     array = np.round(array, 2)
     df_cm = pd.DataFrame(

@@ -1,7 +1,7 @@
 import torch.nn as nn
 import torch
 
-
+## Bert finetuning
 class BERT_clf(nn.Module):
     @staticmethod
     def init_clf_head(module):

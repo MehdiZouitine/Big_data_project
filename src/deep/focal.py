@@ -3,7 +3,14 @@ import torch
 
 
 class FocalLoss(nn.Module):
-    def __init__(self, alpha, gamma):
+    def __init__(self, alpha: float, gamma: float):
+        """[Focal loss defined for unbalanced dataset see paper
+        (https://arxiv.org/pdf/1708.02002.pdf)]
+
+        Args:
+            alpha (float): [Alpha parameter focal loss]
+            gamma (float): [Gamma parameter focal loss]
+        """
         super(FocalLoss, self).__init__()
         self.alpha = alpha
         self.gamma = gamma
@@ -17,6 +24,18 @@ class FocalLoss(nn.Module):
 
 class LinkedFocalLoss(nn.Module):
     def __init__(self, alpha_link: float, gamma: float, link: dict):
+        """[Which penalizes the fact of misclassifying two related classes. We link two classes when they are close semantically:
+         For example we will strongly penalize a model that predicts
+          teacher instead of professor because they are related.
+           We do this because the model tends to confuse two close classes.
+            The model tends to predict teacher for teacher because the class teacher
+             is in the majority.(Also exist on cross-entropy)]
+
+        Args:
+            alpha_link (float): [Coefficient of penalization]
+            link (dict): [Dict of link beetween class]
+            weight (torch.tensor, optional): [Optional sample weight for cross entropy]. Defaults to None.
+        """
         super(LinkedFocalLoss, self).__init__()
         self.alpha_link = alpha_link
         self.gamma = gamma

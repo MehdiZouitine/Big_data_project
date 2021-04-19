@@ -54,25 +54,6 @@ def train(train_dataloader, modules, hyperparameters):
         optimizer.step()
         scheduler.step()
 
-        # model predictions are stored on GPU. So, push it to CPU
-        # preds = preds.detach().cpu().numpy()
-
-        # labels = labels.detach().cpu().numpy().tolist()
-
-        # append the model predictions
-        # total_preds.append(preds)
-
-        # total_labels += labels
-    # compute the training loss of the epoch
-    # avg_loss = total_loss / len(train_dataloader)
-
-    # predictions are in the form of (no. of batches, size of batch, no. of classes).
-    # reshape the predictions in form of (number of samples, no. of classes)
-    # total_preds = np.concatenate(total_preds, axis=0)
-
-    # returns the loss and predictions
-    # return avg_loss, total_preds, total_labels
-
 
 # function for evaluating the model
 def evaluate(dataloader, modules, hyperparameters):
@@ -203,8 +184,3 @@ def learn(
             if stop_and_save["stop"]:
                 break
         return run.info.run_id
-
-
-# def make_submission(run_id):
-#     path = f"mlruns/4/{run_id}/artifacts/model_checkpoint/data/model.pth"
-#     model = torch.load(path)

@@ -2,6 +2,7 @@ import time
 import mlflow
 import numpy as np
 
+
 from sklearn.metrics import f1_score, accuracy_score
 import torch
 import torch.nn as nn
@@ -47,6 +48,7 @@ def train(train_dataloader, modules, hyperparameters):
 
         # backward pass to calculate the gradients
         loss.backward()
+
         # clip the the gradients to 1.0. It helps in preventing the exploding gradient problem
         # torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
 

@@ -1,3 +1,5 @@
+
+# Zouitine Mehdi, Sekhar Ali, Lasserre Aymeric, Tarati Manutea
 # Introduction
 In this project the goal is to predict the job of a person based on a small text description. 
 The data are one dataset containing: the sex, the id, and the text associated to each person. Each row correponds to one specific person.
